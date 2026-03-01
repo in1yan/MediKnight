@@ -115,7 +115,7 @@ async def sign_in_user(email: str, password: str):
         )
 
     try:
-        supabase_client.auth.sign_in_with_password({
+        result = supabase_client.auth.sign_in_with_password({
             'email': email,
             'password': password,
         })
@@ -125,7 +125,19 @@ async def sign_in_user(email: str, password: str):
             detail=str(e),
         )
 
-    # Password verified — send OTP as second factor
+    # Demo users skip OTP — return full session directly
+    if db_user.is_demo:
+        return {
+            "mfa_required": False,
+            "email": email,
+            "access_token": result.session.access_token,
+            "refresh_token": result.session.refresh_token,
+            "token_type": "bearer",
+            "expires_in": result.session.expires_in,
+            "user": db_user,
+        }
+
+    # Send OTP as second factor for regular users
     try:
         supabase_client.auth.sign_in_with_otp({
             'email': email,
@@ -173,4 +185,57 @@ async def verify_mfa(email: str, token: str):
         "expires_in": result.session.expires_in,
         "user": user,
     }
+
+
+_DEMO_USERS = [
+    {"email": "admin@example.com",   "full_name": "Demo Admin",   "role": UserRole.admin},
+    {"email": "doctor@example.com",  "full_name": "Dr. Demo",     "role": UserRole.doctor},
+    {"email": "nurse@example.com",   "full_name": "Demo Nurse",   "role": UserRole.nurse},
+    {"email": "patient@example.com", "full_name": "Demo Patient", "role": UserRole.patient},
+]
+DEMO_PASSWORD = "Demo@1234"
+
+
+async def create_demo_users() -> list[dict]:
+    """Create all 4 demo users (admin/doctor/nurse/patient). Idempotent — skips existing ones."""
+    results = []
+    for demo in _DEMO_USERS:
+        email = demo["email"]
+        existing = await User.find_one(User.email == email)
+        if existing:
+            # Ensure is_demo flag is set
+            if not existing.is_demo:
+                existing.is_demo = True
+                await existing.save()
+            results.append({"email": email, "status": "already_exists"})
+            continue
+
+        # Create in Supabase
+        try:
+            sb_user = supabase_client.auth.sign_up({
+                'email': email,
+                'password': DEMO_PASSWORD,
+            })
+        except AuthApiError as e:
+            results.append({"email": email, "status": "error", "detail": str(e)})
+            continue
+
+        user = User(
+            auth_id=sb_user.user.id,
+            email=email,
+            provider="email",
+            avatar=None,
+            full_name=demo["full_name"],
+            role=demo["role"],
+            is_demo=True,
+            is_active=True,
+            created_at=datetime.now(timezone.utc),
+        )
+        try:
+            await user.insert()
+            results.append({"email": email, "role": demo["role"], "status": "created"})
+        except DuplicateKeyError:
+            results.append({"email": email, "status": "already_exists"})
+
+    return results
 

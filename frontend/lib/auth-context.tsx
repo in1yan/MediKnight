@@ -10,7 +10,7 @@ interface AuthContextType {
   pendingEmail: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ requiresMfa: boolean; role?: string }>;
   signup: (data: SignupData) => Promise<void>;
   verifyMfa: (token: string) => Promise<User>;
   logout: () => void;
@@ -52,12 +52,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = async (email: string, password: string) => {
-    await authApi.login(email, password);
+  const login = async (email: string, password: string): Promise<{ requiresMfa: boolean; role?: string }> => {
+    const result = await authApi.login(email, password);
+
+    if (!result.mfa_required && result.access_token && result.user) {
+      // Demo user — skip OTP, store session immediately
+      const mappedUser = mapApiUser(result.user);
+      setUserState(mappedUser);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('auth_user', JSON.stringify(mappedUser));
+        localStorage.setItem('auth_access_token', result.access_token);
+        localStorage.setItem('auth_refresh_token', result.refresh_token!);
+        localStorage.removeItem('auth_pending_email');
+      }
+      return { requiresMfa: false, role: result.user.role };
+    }
+
+    // Regular user — needs OTP
     setPendingEmail(email);
     if (typeof window !== 'undefined') {
       localStorage.setItem('auth_pending_email', email);
     }
+    return { requiresMfa: true };
   };
 
   const signup = async (data: SignupData) => {
@@ -69,7 +85,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // role is determined server-side from the whitelist
     };
     await authApi.signup(payload);
-    await login(data.email, data.password);
+    // After signup, always proceed to MFA
+    setPendingEmail(data.email);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('auth_pending_email', data.email);
+    }
   };
 
   const verifyMfa = async (token: string): Promise<User> => {

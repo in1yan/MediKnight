@@ -9,10 +9,10 @@ from app.models.users import UserRole
 
 from app.schemas.auth import (
     UserResponse, UserCreation, UserSignIn,
-    SignInResponse, MFARequiredResponse, MFAVerifyRequest,
+    LoginResponse, SignInResponse, MFAVerifyRequest,
     RefreshTokenRequest,
 )
-from app.services.auth import create_user, sign_in_user, verify_mfa, _bypass_invite_create_admin
+from app.services.auth import create_user, sign_in_user, verify_mfa, _bypass_invite_create_admin, create_demo_users
 
 router = APIRouter()
 
@@ -23,7 +23,7 @@ async def auth_signup(newUser: UserCreation):
     return user
 
 
-@router.post("/login", response_model=MFARequiredResponse, status_code=status.HTTP_200_OK)
+@router.post("/login", response_model=LoginResponse, status_code=status.HTTP_200_OK)
 async def auth_login(credentials: UserSignIn):
     return await sign_in_user(credentials.email, credentials.password)
 
@@ -63,6 +63,17 @@ async def get_access_token(token_request: RefreshTokenRequest):
 async def logout(response: Response):
     response.delete_cookie("refresh_token")
     return {"detail": "Logged out"}
+
+
+# ─── Seed demo users ──────────────────────────────────────────────────────────
+@router.post("/seed-demo", status_code=status.HTTP_200_OK)
+async def seed_demo_users(body: "BootstrapAdminRequest"):
+    if not settings.BOOTSTRAP_SECRET:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Bootstrap endpoint is disabled.")
+    if body.secret != settings.BOOTSTRAP_SECRET:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid bootstrap secret.")
+    results = await create_demo_users()
+    return {"message": "Demo users seeded.", "results": results}
 
 
 # ─── Bootstrap endpoint ───────────────────────────────────────────────────────

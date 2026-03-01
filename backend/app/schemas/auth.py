@@ -46,6 +46,18 @@ class MFARequiredResponse(BaseModel):
     email: EmailStr = Field(..., description="Email the OTP was sent to")
 
 
+class LoginResponse(BaseModel):
+    """Returned from /login — either MFA required or direct session (demo users)"""
+    mfa_required: bool
+    email: EmailStr
+    # Present only when mfa_required=False (demo users bypass OTP)
+    access_token: Optional[str] = None
+    refresh_token: Optional[str] = None
+    token_type: Optional[str] = None
+    expires_in: Optional[int] = None
+    user: Optional["UserResponse"] = None
+
+
 class MFAVerifyRequest(BaseModel):
     """Schema for OTP verification"""
     email: EmailStr = Field(..., description="User's email address")

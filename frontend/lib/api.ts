@@ -51,6 +51,17 @@ export interface SignupPayload {
   role?: string;
 }
 
+export interface LoginResponse {
+  mfa_required: boolean;
+  email: string;
+  // Present when mfa_required=false (demo users skip OTP)
+  access_token?: string;
+  refresh_token?: string;
+  token_type?: string;
+  expires_in?: number;
+  user?: ApiUser;
+}
+
 // ─── Patient resource types ───────────────────────────────────────────────────
 
 export interface ApiPatientRecord {
@@ -144,7 +155,7 @@ export const authApi = {
     }),
 
   login: (email: string, password: string) =>
-    request<{ mfa_required: boolean; email: string }>('/api/v1/auth/login', {
+    request<LoginResponse>('/api/v1/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     }),

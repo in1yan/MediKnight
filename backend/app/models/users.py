@@ -23,6 +23,7 @@ class User(Document):
     full_name: Optional[str] = None
     date_of_birth: Optional[date] = None
     is_active: Optional[bool] = True
+    is_demo: bool = False
     created_at: datetime
     role: UserRole
 

@@ -1,33 +1,47 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Users, Stethoscope, Lock, Activity, BarChart3 } from 'lucide-react';
-import { ROLE_LABELS, ROLE_DESCRIPTIONS, MOCK_USERS } from '@/lib/constants';
-import { useAuth } from '@/lib/auth-context';
+import React from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Shield,
+  Users,
+  Stethoscope,
+  Lock,
+  Activity,
+  BarChart3,
+} from "lucide-react";
+import { ROLE_LABELS, ROLE_DESCRIPTIONS, MOCK_USERS } from "@/lib/constants";
+import { useAuth } from "@/lib/auth-context";
 
 const features = [
   {
     icon: Shield,
-    title: 'Role-Based Access Control',
-    description: 'Fine-grained permissions for patients, doctors, nurses, and admins',
+    title: "Role-Based Access Control",
+    description:
+      "Fine-grained permissions for patients, doctors, nurses, and admins",
   },
   {
     icon: Lock,
-    title: 'Multi-Factor Authentication',
-    description: 'Secure your account with 2FA and MFA verification',
+    title: "Multi-Factor Authentication",
+    description: "Secure your account with 2FA and MFA verification",
   },
   {
     icon: Activity,
-    title: 'Audit Logging',
-    description: 'Comprehensive audit trails of all user activities',
+    title: "Audit Logging",
+    description: "Comprehensive audit trails of all user activities",
   },
   {
     icon: BarChart3,
-    title: 'Security Dashboard',
-    description: 'Real-time security status and session monitoring',
+    title: "Security Dashboard",
+    description: "Real-time security status and session monitoring",
   },
 ];
 
@@ -42,7 +56,7 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <Shield className="h-8 w-8 text-blue-600" />
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-              Healthcare Portal
+              MediKnight
             </h1>
           </div>
           <div className="flex items-center gap-4">
@@ -56,11 +70,7 @@ export default function Home() {
                     {user.role}
                   </p>
                 </div>
-                <Button
-                  onClick={logout}
-                  variant="outline"
-                  size="sm"
-                >
+                <Button onClick={logout} variant="outline" size="sm">
                   Logout
                 </Button>
               </>
@@ -85,12 +95,16 @@ export default function Home() {
                 Welcome, {user.name}!
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Access your {user.role} dashboard to manage healthcare records securely
+                Access your {user.role} dashboard to manage healthcare records
+                securely
               </p>
             </div>
 
             <Link href={`/dashboard/${user.role}`}>
-              <Button size="lg" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white">
+              <Button
+                size="lg"
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white"
+              >
                 Go to {ROLE_LABELS[user.role]} Dashboard
               </Button>
             </Link>
@@ -109,12 +123,16 @@ export default function Home() {
                 Secure Healthcare Access Control
               </h2>
               <p className="text-xl text-muted-foreground text-balance max-w-2xl mx-auto">
-                A comprehensive platform demonstrating role-based access control, multi-factor
-                authentication, and security best practices for healthcare systems
+                A comprehensive platform demonstrating role-based access
+                control, multi-factor authentication, and security best
+                practices for healthcare systems
               </p>
               <div className="flex gap-4 justify-center">
                 <Link href="/auth/login">
-                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Button
+                    size="lg"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
                     Demo Login
                   </Button>
                 </Link>
@@ -139,7 +157,9 @@ export default function Home() {
                         </div>
                         <div className="flex-1">
                           <CardTitle>{feature.title}</CardTitle>
-                          <CardDescription>{feature.description}</CardDescription>
+                          <CardDescription>
+                            {feature.description}
+                          </CardDescription>
                         </div>
                       </div>
                     </CardHeader>
@@ -155,16 +175,22 @@ export default function Home() {
                   Try Different Roles
                 </h3>
                 <p className="text-muted-foreground">
-                  Log in with different roles to see how the platform adapts to different user types
+                  Log in with different roles to see how the platform adapts to
+                  different user types
                 </p>
               </div>
 
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {Object.entries(MOCK_USERS).map(([role, userData]) => (
-                  <Card key={role} className="border border-border hover:border-blue-400 transition-colors cursor-pointer group">
+                  <Card
+                    key={role}
+                    className="border border-border hover:border-blue-400 transition-colors cursor-pointer group"
+                  >
                     <CardHeader className="space-y-4">
                       <div>
-                        <CardTitle className="capitalize text-lg">{ROLE_LABELS[role]}</CardTitle>
+                        <CardTitle className="capitalize text-lg">
+                          {ROLE_LABELS[role]}
+                        </CardTitle>
                         <CardDescription className="text-xs mt-1">
                           {ROLE_DESCRIPTIONS[role]}
                         </CardDescription>
@@ -172,17 +198,24 @@ export default function Home() {
                       <div className="space-y-2">
                         <div className="text-sm">
                           <span className="text-muted-foreground">Email: </span>
-                          <span className="font-mono text-xs">{userData.email}</span>
+                          <span className="font-mono text-xs">
+                            {userData.email}
+                          </span>
                         </div>
                         <div className="text-sm">
-                          <span className="text-muted-foreground">Password: </span>
+                          <span className="text-muted-foreground">
+                            Password:{" "}
+                          </span>
                           <span className="font-mono text-xs">password</span>
                         </div>
                       </div>
-                      <Link href="/auth/login" onClick={() => {
-                        // Store the role preference in localStorage for the login form
-                        localStorage.setItem('preferred_role', role);
-                      }}>
+                      <Link
+                        href="/auth/login"
+                        onClick={() => {
+                          // Store the role preference in localStorage for the login form
+                          localStorage.setItem("preferred_role", role);
+                        }}
+                      >
                         <Button
                           size="sm"
                           className="w-full bg-blue-600 hover:bg-blue-700 text-white"
@@ -205,7 +238,8 @@ export default function Home() {
                     Four Role Types
                   </h4>
                   <p className="text-sm text-muted-foreground">
-                    Patient, Doctor, Nurse, and Admin roles with customized dashboards
+                    Patient, Doctor, Nurse, and Admin roles with customized
+                    dashboards
                   </p>
                 </div>
                 <div>
@@ -214,7 +248,8 @@ export default function Home() {
                     Security Focus
                   </h4>
                   <p className="text-sm text-muted-foreground">
-                    Multi-factor authentication, permission checks, and audit logging
+                    Multi-factor authentication, permission checks, and audit
+                    logging
                   </p>
                 </div>
                 <div>
@@ -223,7 +258,8 @@ export default function Home() {
                     Healthcare Data
                   </h4>
                   <p className="text-sm text-muted-foreground">
-                    Realistic medical records, prescriptions, and patient information
+                    Realistic medical records, prescriptions, and patient
+                    information
                   </p>
                 </div>
               </div>
@@ -235,7 +271,8 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-border bg-white dark:bg-slate-950 mt-20">
         <div className="max-w-7xl mx-auto px-4 py-8 text-center text-sm text-muted-foreground">
-          Healthcare Security & Access Control Platform • Built for demonstration
+          Healthcare Security & Access Control Platform • Built for
+          demonstration
         </div>
       </footer>
     </div>
