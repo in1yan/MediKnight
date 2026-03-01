@@ -206,14 +206,13 @@ export default function Home() {
                           <span className="text-muted-foreground">
                             Password:{" "}
                           </span>
-                          <span className="font-mono text-xs">password</span>
+                          <span className="font-mono text-xs">Demo@1234</span>
                         </div>
                       </div>
                       <Link
                         href="/auth/login"
                         onClick={() => {
-                          // Store the role preference in localStorage for the login form
-                          localStorage.setItem("preferred_role", role);
+                          localStorage.setItem("preferred_demo_email", userData.email);
                         }}
                       >
                         <Button

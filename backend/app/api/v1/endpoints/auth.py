@@ -66,8 +66,11 @@ async def logout(response: Response):
 
 
 # ─── Seed demo users ──────────────────────────────────────────────────────────
+class SeedDemoRequest(BaseModel):
+    secret: str
+
 @router.post("/seed-demo", status_code=status.HTTP_200_OK)
-async def seed_demo_users(body: "BootstrapAdminRequest"):
+async def seed_demo_users(body: SeedDemoRequest):
     if not settings.BOOTSTRAP_SECRET:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Bootstrap endpoint is disabled.")
     if body.secret != settings.BOOTSTRAP_SECRET:

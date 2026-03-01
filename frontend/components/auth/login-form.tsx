@@ -7,15 +7,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, Loader2, Zap } from 'lucide-react';
+import { AlertCircle, Loader2, Zap, Shield, Stethoscope, HeartPulse, UserRound } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const DEMO_USERS = [
-  { label: 'Admin',   email: 'admin@example.com',   role: 'admin' },
-  { label: 'Doctor',  email: 'doctor@example.com',  role: 'doctor' },
-  { label: 'Nurse',   email: 'nurse@example.com',   role: 'nurse' },
-  { label: 'Patient', email: 'patient@example.com', role: 'patient' },
+  { label: 'Admin',   email: 'admin@example.com',   role: 'admin',   icon: Shield,        desc: 'Manage users & system' },
+  { label: 'Doctor',  email: 'doctor@example.com',  role: 'doctor',  icon: Stethoscope,   desc: 'View patients & prescribe' },
+  { label: 'Nurse',   email: 'nurse@example.com',   role: 'nurse',   icon: HeartPulse,    desc: 'Record vitals & notes' },
+  { label: 'Patient', email: 'patient@example.com', role: 'patient', icon: UserRound,     desc: 'View records & appointments' },
 ];
+const DEMO_PASSWORD = 'Demo@1234';
 
 export function LoginForm() {
   const router = useRouter();
@@ -24,14 +25,13 @@ export function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingDemo, setLoadingDemo] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const doLogin = async (e: string, p: string) => {
     setError('');
     setIsLoading(true);
-
     try {
-      const result = await login(email, password);
+      const result = await login(e, p);
       if (result.requiresMfa) {
         router.push('/auth/mfa');
       } else {
@@ -41,13 +41,37 @@ export function LoginForm() {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setIsLoading(false);
+      setLoadingDemo(null);
     }
   };
 
-  const fillDemo = (demoEmail: string) => {
-    setEmail(demoEmail);
-    setPassword('Demo@1234');
-    setError('');
+  // Auto-login if arriving from landing page "Try as X" button
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const preferred = localStorage.getItem('preferred_demo_email');
+    if (preferred) {
+      localStorage.removeItem('preferred_demo_email');
+      const demo = DEMO_USERS.find(d => d.email === preferred);
+      if (demo) {
+        setEmail(demo.email);
+        setPassword(DEMO_PASSWORD);
+        setLoadingDemo(demo.role);
+        doLogin(demo.email, DEMO_PASSWORD);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    doLogin(email, password);
+  };
+
+  const handleDemoLogin = (demo: typeof DEMO_USERS[0]) => {
+    setEmail(demo.email);
+    setPassword(DEMO_PASSWORD);
+    setLoadingDemo(demo.role);
+    doLogin(demo.email, DEMO_PASSWORD);
   };
 
   return (
@@ -97,18 +121,13 @@ export function LoginForm() {
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               disabled={isLoading}
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign In'
-              )}
+              {isLoading && !loadingDemo ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Signing in...</>
+              ) : 'Sign In'}
             </Button>
 
             {/* Demo accounts section */}
-            <div className="relative my-4">
+            <div className="relative my-2">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-border" />
               </div>
@@ -117,36 +136,44 @@ export function LoginForm() {
               </div>
             </div>
 
-            <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-              <Zap className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-blue-700 dark:text-blue-300 text-xs">
-                Demo accounts sign in instantly — <strong>no OTP required</strong>.
-                Password: <code className="font-mono bg-blue-100 dark:bg-blue-900 px-1 rounded">Demo@1234</code>
+            <Alert className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
+              <Zap className="h-4 w-4 text-amber-600 shrink-0" />
+              <AlertDescription className="text-amber-700 dark:text-amber-300 text-xs leading-relaxed">
+                Click any role below to <strong>instantly log in</strong> — no OTP or email verification needed for demo accounts.
               </AlertDescription>
             </Alert>
 
             <div className="grid grid-cols-2 gap-2">
-              {DEMO_USERS.map((d) => (
-                <Button
-                  key={d.role}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fillDemo(d.email)}
-                  className={email === d.email ? 'border-blue-500 bg-blue-50 dark:bg-blue-950' : ''}
-                >
-                  {d.label}
-                </Button>
-              ))}
+              {DEMO_USERS.map((d) => {
+                const Icon = d.icon;
+                const isThisLoading = loadingDemo === d.role;
+                return (
+                  <button
+                    key={d.role}
+                    type="button"
+                    onClick={() => !isLoading && handleDemoLogin(d)}
+                    disabled={isLoading}
+                    className="flex items-start gap-2 rounded-lg border border-border p-3 text-left transition-colors hover:bg-muted hover:border-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isThisLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin mt-0.5 text-blue-600 shrink-0" />
+                    ) : (
+                      <Icon className="h-4 w-4 mt-0.5 text-blue-600 shrink-0" />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium leading-none">{d.label}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{d.desc}</p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
 
-            {email && DEMO_USERS.find(d => d.email === email) && (
-              <p className="text-xs text-center text-muted-foreground">
-                {email} · password pre-filled
-              </p>
-            )}
+            <p className="text-xs text-center text-muted-foreground">
+              Demo password: <code className="font-mono bg-muted px-1 py-0.5 rounded">{DEMO_PASSWORD}</code>
+            </p>
 
-            <div className="pt-2 text-center text-sm">
+            <div className="pt-1 text-center text-sm">
               <span className="text-muted-foreground">Don&apos;t have an account? </span>
               <button
                 type="button"
