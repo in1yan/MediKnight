@@ -1,0 +1,23 @@
+[project]
+name = "backend"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+dependencies = [
+  "beanie>=2.0.1",
+  "fastapi",
+  "gotrue>=2.12.4",
+  "jose>=1.0.0",
+  "motor>=3.7.1",
+  "passlib>=1.7.4",
+  "pillow>=12.1.0",
+  "pydantic[email]>=2.0",
+  "pydantic-settings>=2.0",
+  "python-dotenv>=1.0",
+  "python-jose>=3.5.0",
+  "python-multipart>=0.0.9",
+  "slowapi>=0.1.9",
+  "supabase>=2.27.0",
+  "supabase-auth>=2.27.0",
+  "uvicorn>=0.27",
+]
